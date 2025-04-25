@@ -1,0 +1,310 @@
+
+Desarrolle una app en java que sea maven y que genere un jar. El artefacto debe ser Actividad2, el groupId ar.edu.udeci.pv. y la version 1.0-SNAPSHOT.
+El proyecto debe contener las librerías:  commons-cli y log4j. Voy a utilizar  IntelliJ para realizar esta actividad. Gracias
+
+1. Crear el proyecto en IntelliJ
+
+    Abre IntelliJ y elige File → New → Project…
+
+    Selecciona Maven y pulsa Next.
+
+    En GroupId escribe ar.edu.udeci.pv; en ArtifactId escribe Actividad2; en Version deja 1.0-SNAPSHOT. Pulsa Next y luego Finish.
+
+    IntelliJ creará la estructura básica de un proyecto Maven:
+
+    Actividad2/
+    ├─ pom.xml
+    └─ src/
+       ├─ main/
+       │  └─ java/
+       └─ test/
+          └─ java/
+
+2. Configurar el POM (pom.xml)
+
+Abre pom.xml y reemplaza su contenido por lo siguiente (incluye las dependencias de Commons-CLI y Log4j 1.x):
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>ar.edu.udeci.pv</groupId>
+  <artifactId>Actividad2</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <!-- Para generar un JAR con dependencia embebida -->
+    <main.class>ar.edu.udeci.pv.Main</main.class>
+  </properties>
+
+  <dependencies>
+    <!-- Apache Commons CLI -->
+    <dependency>
+      <groupId>commons-cli</groupId>
+      <artifactId>commons-cli</artifactId>
+      <version>1.4</version>
+    </dependency>
+    <!-- Log4j 1.x -->
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Plugin para compilar y empaquetar jar ejecutable -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+              <mainClass>${main.class}</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <!-- Assembly plugin para incluir dependencias en un solo jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>${main.class}</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+
+3. Estructura de paquetes y clase principal
+
+Crea el paquete ar.edu.udeci.pv bajo src/main/java y dentro una clase Main.java:
+
+package ar.edu.udeci.pv;
+
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.commons.cli.*;
+
+public class Main {
+    // Logger de Log4j
+    private static final Logger logger = Logger.getLogger(Main.class);
+
+    public static void main(String[] args) {
+        // Configurar Log4j (archivo log4j.properties en classpath)
+        PropertyConfigurator.configure(Main.class.getClassLoader()
+                                           .getResource("log4j.properties"));
+
+        // Definición de opciones
+        Options options = new Options();
+        options.addOption("n", "name", true, "Nombre de usuario");
+        options.addOption("h", "help", false, "Muestra ayuda");
+
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+        CommandLine cmd;
+
+        try {
+            cmd = parser.parse(options, args);
+
+            if (cmd.hasOption("h")) {
+                formatter.printHelp("Actividad2", options);
+                return;
+            }
+
+            String name = cmd.getOptionValue("n", "Invitado");
+            logger.info("Hola, " + name + "!");
+            System.out.println("Hola, " + name + "!");
+
+        } catch (ParseException e) {
+            logger.error("Error al parsear los argumentos: " + e.getMessage());
+            System.err.println("Argumentos inválidos.");
+            formatter.printHelp("Actividad2", options);
+            System.exit(1);
+        }
+    }
+}
+
+4. Configurar Log4j
+
+En src/main/resources, crea un archivo log4j.properties:
+# Raíz del logger
+log4j.rootLogger=INFO, console
+
+# Appender de consola
+log4j.appender.console=org.apache.log4j.ConsoleAppender
+log4j.appender.console.layout=org.apache.log4j.PatternLayout
+log4j.appender.console.layout.ConversionPattern=%d{ISO8601} [%t] %-5p %c - %m%n
+
+5. Compilar y generar el JAR
+
+En IntelliJ, abre la pestaña Maven (a la derecha), expande Lifecycle y ejecuta:
+
+    clean
+
+    package
+
+Esto generará en target/ dos JARs:
+
+    Actividad2-1.0-SNAPSHOT.jar (solo tu código)
+
+    Actividad2-1.0-SNAPSHOT-jar-with-dependencies.jar (con todas las dependencias embebidas)
+
+
+6. Ejecutar la aplicación
+
+    Desde la terminal (ubicada en la raíz del proyecto):
+
+# Con dependencias embebidas
+java -jar target/Actividad2-1.0-SNAPSHOT-jar-with-dependencies.jar -n Juan
+
+Salida esperada:
+2025-04-23 12:00:00 [main] INFO  ar.edu.udeci.pv.Main - Hola, Juan!
+Hola, Juan!
+
+Con esto ya tendrás un proyecto Maven completamente funcional en IntelliJ que genera un JAR ejecutable,
+ emplea commons-cli para parsear opciones de línea de comando y log4j para el logging. ¡Éxitos con tu actividad!
+
+
+ En resumen, el proyecto sigue la convención de un proyecto Maven con empaquetado en JAR;
+  gestiona dependencias (Commons CLI, Log4j, JUnit 5) vía su pom.xml;
+  define un ciclo de vida de build (clean → compile → test → package → install) que genera un JAR “fat” con todas las dependencias;
+  en tiempo de ejecución usa Log4j para logging y Commons CLI para parsear opciones de línea de comandos;
+  y en desarrollo local, IntelliJ IDEA se encarga de compilar, ejecutar y depurar gracias a la configuración del SDK, la marcación de fuentes y la recarga de Maven. A nivel de testing, JUnit 5 valida tu lógica en src/test/java.
+
+  1. Estructura general del proyecto
+  1.1. Directorios y convenciones Maven
+
+      src/main/java: contiene las clases de producción (p. ej. ar.edu.udeci.pv.Main).
+
+      src/main/resources: archivos de configuración (p. ej. log4j.properties).
+
+      src/test/java: pruebas unitarias con JUnit 5.
+
+      target/: resultado del build: compilados .class, JARs y reports de test.
+
+  1.2. El POM como corazón del proyecto
+
+      Declara groupId, artifactId, version, packaging.
+
+      Gestiona dependencias:
+
+          Apache Commons CLI para parsear args.
+
+          Log4j 1.x para logging configurable.
+
+          JUnit Jupiter (junit-jupiter-api y -engine) para pruebas.
+
+      Configura plugins:
+
+          maven-jar-plugin para escribir el Main-Class en el manifest.
+
+          maven-assembly-plugin (o alternativamente maven-shade-plugin) para crear el “jar-with-dependencies”.
+
+ 2. Flujo de build y empaquetado
+ 2.1. Fases de Maven
+
+     clean: elimina target/.
+
+     compile: compila el código de src/main/java.
+
+     test: compila y ejecuta pruebas de src/test/java (JUnit 5).
+
+     package: empaqueta en JAR; el assembly plugin genera el “fat-JAR”.
+
+     install: copia el artefacto al repositorio local Maven (~/.m2).
+
+
+2.2. Creación del JAR ejecutable
+
+    El manifest (META-INF/MANIFEST.MF) incluye
+
+    Main-Class: ar.edu.udeci.pv.Main
+
+    El “jar-with-dependencies” integra todas las librerías para no depender de classpath externo.
+
+
+3. Interacción en tiempo de ejecución
+3.1. Arranque de la aplicación
+
+Cuando invocas:
+
+java -jar Actividad2-1.0-SNAPSHOT-jar-with-dependencies.jar -n Juan
+
+se dispara Main.main(args).
+
+3.2. Logging con Log4j
+
+    Carga: PropertyConfigurator.configure("log4j.properties").
+
+    Niveles: logger.info(...), logger.error(...), etc.
+
+    Appender: consola (definido en log4j.properties), con patrón de salida.
+
+3.3. Parseo de argumentos con Commons CLI
+
+    Definición: Options options = new Options(); options.addOption("n", "name", true, ...).
+
+    Parseo: CommandLine cmd = new DefaultParser().parse(options, args).
+
+    Uso:
+    if (cmd.hasOption("h")) { /* muestra ayuda */ }
+    String name = cmd.getOptionValue("n", "Invitado");
+
+4. Desarrollo ágil en IntelliJ IDEA
+4.1. Integración de Maven
+
+    Reimport: cada vez que cambias el POM, usar “Reimport All Maven Projects”.
+
+    SDK: asegurar un JDK (no solo JRE) y marcar src/main/java como Sources Root.
+
+4.2. Ciclo de edición y prueba
+
+    Editar código en Main.java o en clases auxiliares.
+
+    Ejecutar directamente la clase Main desde IntelliJ (Run → Main).
+
+    Depurar con breakpoints para inspeccionar args, flujo de parseo y logs.
+
+    Ejecutar pruebas (Run → All Tests) que lanzan JUnit 5 y muestran reports.
+
+
+5. Buenas prácticas y recomendaciones
+
+    Versionado: usa 1.0-SNAPSHOT mientras desarrollas, cambia a 1.0 al liberar.
+
+    Gestión de logs: externaliza el archivo log4j.properties para entornos distintos (dev, prod).
+
+    Modularidad: si el proyecto crece, considera un multi-módulo Maven para aislar CLI, lógica de negocio y tests.
+
+    Automatización CI/CD: configura un servidor (GitHub Actions, Jenkins) para ejecutar mvn clean install y desplegar artefactos.
+
+Este fue un panorama completo de cómo se crea, empaqueta, ejecuta y evoluciona el proyecto Actividad2,
+así como de la interacción de sus componentes clave y del flujo de trabajo en tu IDE y en la línea de comandos.
