@@ -1,3 +1,4 @@
+Hernan Alejandro Aguirre. Programacion de vanguardia 2025 
 
 Desarrolle una app en java que sea maven y que genere un jar. El artefacto debe ser Actividad2, el groupId ar.edu.udeci.pv. y la version 1.0-SNAPSHOT.
 El proyecto debe contener las librerías:  commons-cli y log4j. Voy a utilizar  IntelliJ para realizar esta actividad. Gracias
